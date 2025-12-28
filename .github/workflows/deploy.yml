@@ -1,0 +1,24 @@
+name: Multi Container Docker Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - run: docker build -f Dockerfile.dev -t rahulshinde276/client-dev ../../client
+      - run: docker run rahulshinde276/client-dev npm run test --
+      - run: docker build -t rahulshinde276/client ../../client
+      - run: docker build -t rahulshinde276/worker ../../worker
+      - run: docker build -t rahulshinde276/nginx ../../nginx
+      - run: docker build -t rahulshinde276/server ../../server
+      - run: docker push rahulshinde276/client
+      - run: docker push rahulshinde276/worker
+      - run: docker push rahulshinde276/nginx
+      - run: docker push rahulshinde276/server
+
