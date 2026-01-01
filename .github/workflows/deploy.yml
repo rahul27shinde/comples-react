@@ -6,7 +6,8 @@ on:
       - master
 
 jobs:
-  build:
+  docker-push:
+    name: Push Images to DockerHub
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,3 +23,23 @@ jobs:
       - run: docker push rahulshinde276/nginx
       - run: docker push rahulshinde276/server
 
+  webapp-deploy:
+    name: Deploy WebApp to Elastic Beanstalk
+    needs: docker-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: multi-container
+          environment_name: Multi-container-env
+          version_label: 12345
+          region: us-west-2
+          deployment_package: deploy.zip
